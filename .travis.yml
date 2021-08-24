@@ -1,0 +1,24 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t jmendo19/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true jmendo19/react-test npm test
+
+after_success:
+  - docker build -t jmendo19/multi-client ./client
+  - docker build -t jmendo19/multi-nginx ./nginx
+  - docker build -t jmendo19/multi-server ./server
+  - docker build -t jmendo19/multi-worker ./worker
+
+  #Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  # Take those images and push onto the docker hub
+  - docker push jmendo19/multi-client
+  - docker push jmendo19/multi-nginx
+  - docker push jmendo19/multi-server
+  - docker push jmendo19/multi-worker
